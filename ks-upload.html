@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick Upload Single File</title>
+    <meta name="description" content="Quick Upload of a Single File In Chunks">
+</head>
+<body>
+<input type="file" id="fileInput" />
+      <button id="uploadButton" onclick="uploadFile()">Upload</button>
+      <div id="uploadProgress"></div>
+      <div id="uploadMessage"></div>
+
+      <script>
+             function uploadFile() {
+                   const fileInput = document.getElementById('fileInput');
+                   const uploadButton = document.getElementById('uploadButton');
+                   const uploadProgress = document.getElementById('uploadProgress');
+                   const uploadMessage = document.getElementById('uploadMessage');
+                   const file = fileInput.files[0];
+
+                   const chunkSize = 1024 * 1024 * 2; // 2MB
+                   let offset = 0;
+
+                   // Disable the upload button to prevent multiple clicks
+                   uploadButton.disabled = true;
+                   uploadMessage.textContent = ''; // Clear previous messages
+
+                   function uploadChunk() {
+                        if (offset >= file.size) {
+                        uploadMessage.textContent = "Upload complete";
+                        uploadButton.disabled = false; // Re-enable the button
+                        return;
+                   }
+
+                  const chunk = file.slice(offset, offset + chunkSize);
+                  const formData = new FormData();
+                  formData.append('fileChunk', chunk);
+                  formData.append('fileName', file.name);
+                  formData.append('fileSize', file.size);
+                  formData.append('chunkOffset', offset);
+
+                  fetch('ks-upload.php', {
+                      method: 'POST',
+                      body: formData
+                  })
+                      .then(response => response.text())
+                      .then(data => {
+                           console.log(data);
+                           offset += chunkSize;
+                           const progressPercentage = Math.min(100, (offset / file.size) * 100).toFixed(2);
+                           uploadProgress.textContent = `Upload progress: ${progressPercentage}%`;
+                           uploadChunk(); // Upload the next chunk
+                       })
+                      .catch(error => {
+                          console.error('Error uploading chunk:', error);
+                          uploadMessage.textContent = 'Error during upload. Please try again.';
+                          uploadButton.disabled = false; // Re-enable the button on error
+                      });
+                 }
+
+            uploadChunk(); // Start uploading chunks
+      }
+     </script>
+
+</body>
+</html>
