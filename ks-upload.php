@@ -25,6 +25,8 @@
 
    if (!file_exists($targetDir . "/" . $path)) mkdir($targetDir . "/" . $path, 0777, true);
 
+   $filePath = $targetDir . "/" . $full_path;
+
    if ($chunkOffset == 0 && file_exists($filePath)) {
         $backupName = $filePath . "_" . time();
         if (!rename($filePath, $backupName)) {
@@ -34,8 +36,6 @@
             exit;
         }
    }
-   
-   $filePath = $targetDir . "/" . $full_path;
    $fp = fopen($filePath, 'ab');
    if ($fp === false) {
        echo "Cannot open file for writing";
